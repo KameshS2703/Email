@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Permission Error{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; text-align: center; padding: 60px 20px;">
+    <div style="font-size: 80px; margin-bottom: 30px; color: #dc3545;">
+        ⛔
+    </div>
+    
+    <h1 style="color: #333; margin-bottom: 20px;">
+        Permission Denied
+    </h1>
+    
+    <div style="background: #f8d7da; padding: 25px; border-radius: 12px; margin-bottom: 30px; border-left: 5px solid #dc3545;">
+        <p style="margin: 0; color: #721c24; font-size: 18px; font-weight: 600;">
+            {{ error }}
+        </p>
+    </div>
+    
+    {% if device %}
+        <div class="card" style="margin-bottom: 30px; text-align: left;">
+            <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <span>📱</span>
+                <span>Current Device Status</span>
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <div style="color: #666; font-size: 14px;">Device Name</div>
+                    <div style="font-weight: 600; font-size: 16px;">{{ device.device_name }}</div>
+                </div>
+                
+                <div>
+                    <div style="color: #666; font-size: 14px;">Read Permission</div>
+                    <div>
+                        {% if device.read_permission %}
+                            <span style="color: #28a745; font-weight: 600;">✅ Allowed</span>
+                        {% else %}
+                            <span style="color: #dc3545; font-weight: 600;">❌ Denied</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="color: #666; font-size: 14px;">Write Permission</div>
+                    <div>
+                        {% if device.write_permission %}
+                            <span style="color: #28a745; font-weight: 600;">✅ Allowed</span>
+                        {% else %}
+                            <span style="color: #dc3545; font-weight: 600;">❌ Denied</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="color: #666; font-size: 14px;">Device Status</div>
+                    <div>
+                        {% if device.is_active %}
+                            <span style="color: #28a745; font-weight: 600;">✅ Active</span>
+                        {% else %}
+                            <span style="color: #dc3545; font-weight: 600;">❌ Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 40px;">
+        <a href="{% url 'accounts:profile' %}" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+            👤 View Profile
+        </a>
+        
+        {% if show_admin_link %}
+            <a href="/admin/" target="_blank" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px;">
+                ⚙️ Admin Panel
+            </a>
+        {% endif %}
+        
+        <a href="{% url 'accounts:logout' %}" class="btn btn-danger" style="display: flex; align-items: center; gap: 8px;">
+            🚪 Logout & Try Again
+        </a>
+    </div>
+    
+    <div style="margin-top: 40px; padding: 20px; background: #e3f2fd; border-radius: 10px;">
+        <h4 style="display: flex; align-items: center; gap: 10px; margin: 0 0 15px 0; color: #1565c0;">
+            <span>ℹ️</span>
+            <span>Need Help?</span>
+        </h4>
+        <p style="margin: 0; color: #1565c0;">
+            If you believe this is an error, contact your system administrator 
+            or try logging in again from a different device.
+        </p>
+    </div>
+</div>
+{% endblock %}

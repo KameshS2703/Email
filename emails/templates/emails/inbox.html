@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - Email System{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 30px; min-height: 600px;">
+    <!-- Sidebar -->
+    <div style="width: 280px; flex-shrink: 0;">
+        <div class="card" style="height: 100%;">
+            <!-- Compose Button -->
+            {% if can_write %}
+                <a href="{% url 'emails:compose' %}" 
+                   class="btn btn-primary"
+                   style="width: 100%; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px;">
+                    <span style="font-size: 20px;">✏️</span>
+                    <span>Compose Email</span>
+                </a>
+            {% else %}
+                <button disabled
+                        class="btn btn-secondary"
+                        style="width: 100%; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px; cursor: not-allowed;"
+                        title="Write permission not enabled on this device">
+                    <span style="font-size: 20px;">⛔</span>
+                    <span>Compose (Disabled)</span>
+                </button>
+                <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                    <p style="margin: 0; color: #856404; font-size: 14px;">
+                        <strong>⚠️ Write Permission Required</strong><br>
+                        Contact admin to enable email composition.
+                    </p>
+                </div>
+            {% endif %}
+            
+            <!-- Navigation -->
+            <div style="margin-bottom: 30px;">
+                <h4 style="color: #666; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                    <span>📂</span>
+                    <span>Mailbox</span>
+                </h4>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <a href="{% url 'emails:inbox' %}" 
+                       style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; text-decoration: none; border-radius: 10px; transition: all 0.3s; {% if is_inbox %}background: #e3f2fd; color: #1565c0; font-weight: 600;{% else %}color: #555;{% endif %}">
+                        <span style="font-size: 18px;">📥</span>
+                        <span>Inbox</span>
+                        {% if is_inbox and emails.count > 0 %}
+                            <span style="margin-left: auto; background: #4285f4; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                                {{ emails.count }}
+                            </span>
+                        {% endif %}
+                    </a>
+                    
+                    <a href="{% url 'emails:sent' %}" 
+                       style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; text-decoration: none; border-radius: 10px; transition: all 0.3s; {% if is_sent %}background: #e3f2fd; color: #1565c0; font-weight: 600;{% else %}color: #555;{% endif %}">
+                        <span style="font-size: 18px;">📤</span>
+                        <span>Sent</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Device Info -->
+            {% if device %}
+                <div style="margin-top: auto; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <h4 style="color: #666; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <span>📱</span>
+                        <span>Device Status</span>
+                    </h4>
+                    
+                    <div style="font-size: 14px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #888;">Device:</span>
+                            <span style="font-weight: 600;">{{ device.device_name|truncatechars:15 }}</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #888;">Read:</span>
+                            {% if device.can_read %}
+                                <span style="color: #28a745; font-weight: 600;">✅ Allowed</span>
+                            {% else %}
+                                <span style="color: #dc3545; font-weight: 600;">❌ Denied</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #888;">Write:</span>
+                            {% if device.can_write %}
+                                <span style="color: #28a745; font-weight: 600;">✅ Allowed</span>
+                            {% else %}
+                                <span style="color: #dc3545; font-weight: 600;">❌ Denied</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div style="flex: 1;">
+        <div class="card" style="height: 100%;">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f0f0f0;">
+                <h2 style="display: flex; align-items: center; gap: 12px; margin: 0;">
+                    {% if is_sent %}
+                        <span style="font-size: 28px;">📤</span>
+                        <span>Sent Emails</span>
+                    {% else %}
+                        <span style="font-size: 28px;">📥</span>
+                        <span>Inbox</span>
+                    {% endif %}
+                </h2>
+                
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="color: #666; font-size: 14px;">
+                        {% if emails %}
+                            {{ emails.count }} email{{ emails.count|pluralize }}
+                        {% else %}
+                            No emails
+                        {% endif %}
+                    </span>
+                    
+                    {% if user.is_superuser or user.is_staff %}
+                        <a href="/admin/" target="_blank" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                            ⚙️ Manage Permissions
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Email List -->
+            {% if emails %}
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-radius: 10px;">
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555;">
+                                    {% if is_sent %}To{% else %}From{% endif %}
+                                </th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555;">
+                                    Subject
+                                </th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555;">
+                                    Date
+                                </th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555;">
+                                    Status
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for email in emails %}
+                                <tr style="border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background-color 0.2s;"
+                                    onclick="window.location.href='{% url 'emails:detail' email.id %}'"
+                                    onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                    onmouseout="this.style.backgroundColor='transparent'">
+                                    
+                                    <td style="padding: 15px;">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">
+                                                {% if is_sent %}
+                                                    {{ email.recipient.username|first|upper }}
+                                                {% else %}
+                                                    {{ email.sender.username|first|upper }}
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600;">
+                                                    {% if is_sent %}
+                                                        {{ email.recipient.username }}
+                                                    {% else %}
+                                                        {{ email.sender.username }}
+                                                    {% endif %}
+                                                </div>
+                                                {% if not is_sent and not email.read %}
+                                                    <div style="background: #4285f4; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-top: 3px; display: inline-block;">
+                                                        New
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td style="padding: 15px;">
+                                        <div style="font-weight: 500; margin-bottom: 5px;">
+                                            {{ email.subject|truncatechars:60 }}
+                                        </div>
+                                        <div style="color: #888; font-size: 13px; max-width: 400px;">
+                                            {{ email.body|truncatechars:100 }}
+                                        </div>
+                                    </td>
+                                    
+                                    <td style="padding: 15px;">
+                                        <div style="font-weight: 500;">
+                                            {{ email.timestamp|date:"M d" }}
+                                        </div>
+                                        <div style="color: #888; font-size: 13px;">
+                                            {{ email.timestamp|date:"H:i" }}
+                                        </div>
+                                    </td>
+                                    
+                                    <td style="padding: 15px;">
+                                        {% if is_sent %}
+                                            <span style="background: #e8f5e9; color: #2e7d32; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                                <span>✓</span>
+                                                <span>Sent</span>
+                                            </span>
+                                        {% else %}
+                                            {% if email.read %}
+                                                <span style="background: #f8f9fa; color: #666; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                                    Read
+                                                </span>
+                                            {% else %}
+                                                <span style="background: #e3f2fd; color: #1565c0; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                                    <span style="font-size: 10px;">●</span>
+                                                    <span>Unread</span>
+                                                </span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Empty State (when filtered) -->
+            {% else %}
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">
+                        {% if is_sent %}
+                            📤
+                        {% else %}
+                            📭
+                        {% endif %}
+                    </div>
+                    <h3 style="color: #666; margin-bottom: 10px;">
+                        {% if is_sent %}
+                            No Sent Emails
+                        {% else %}
+                            Inbox is Empty
+                        {% endif %}
+                    </h3>
+                    <p style="color: #888; max-width: 400px; margin: 0 auto 25px auto;">
+                        {% if is_sent %}
+                            You haven't sent any emails yet.
+                        {% else %}
+                            Your inbox is clean! No new messages.
+                        {% endif %}
+                    </p>
+                    
+                    {% if can_write and not is_sent %}
+                        <a href="{% url 'emails:compose' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 10px;">
+                            <span>✏️</span>
+                            <span>Compose Your First Email</span>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @media (max-width: 1024px) {
+        .container {
+            flex-direction: column;
+        }
+        
+        .sidebar {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .email-list th, .email-list td {
+            padding: 10px !important;
+            font-size: 14px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .email-list {
+            display: block;
+            overflow-x: auto;
+        }
+        
+        .email-list table {
+            min-width: 600px;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_reply %}Reply{% else %}Compose{% endif %} Email{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <!-- Header -->
+    <div style="margin-bottom: 30px;">
+        <a href="{% url 'emails:inbox' %}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+            ← Cancel
+        </a>
+        
+        <h1 style="display: flex; align-items: center; gap: 12px; margin: 0;">
+            {% if is_reply %}
+                <span style="font-size: 32px;">↩️</span>
+                <span>Reply to Email</span>
+            {% else %}
+                <span style="font-size: 32px;">✏️</span>
+                <span>Compose New Email</span>
+            {% endif %}
+        </h1>
+        
+        {% if device and not device.can_write %}
+            <div style="background: #f8d7da; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 5px solid #dc3545;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 24px;">⛔</span>
+                    <div>
+                        <strong style="color: #721c24;">Write Permission Denied</strong>
+                        <p style="margin: 5px 0 0 0; color: #721c24;">
+                            You don't have permission to send emails from this device.
+                            Contact admin to enable write permission.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Compose Form -->
+    <div class="card">
+        <form method="post" id="composeForm">
+            {% csrf_token %}
+            
+            <!-- Recipient Field -->
+            {% if is_reply %}
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #555; display: flex; align-items: center; gap: 8px;">
+                        <span>👤</span>
+                        <span>To</span>
+                    </label>
+                    <input type="text" 
+                           value="{{ original.sender.username }}" 
+                           style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; background: #f8f9fa;"
+                           readonly>
+                    <input type="hidden" name="recipient" value="{{ original.sender.username }}">
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #555; display: flex; align-items: center; gap: 8px;">
+                        <span>📝</span>
+                        <span>Subject</span>
+                    </label>
+                    <input type="text" 
+                           value="Re: {{ original.subject }}" 
+                           style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; background: #f8f9fa;"
+                           readonly>
+                    <input type="hidden" name="subject" value="Re: {{ original.subject }}">
+                </div>
+            {% else %}
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #555; display: flex; align-items: center; gap: 8px;">
+                        <span>👤</span>
+                        <span>To (Username)</span>
+                    </label>
+                    <input type="text" 
+                           name="recipient" 
+                           id="recipientInput"
+                           style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;"
+                           placeholder="Enter recipient's username"
+                           required
+                           onfocus="this.style.borderColor='#4285f4'"
+                           onblur="this.style.borderColor='#e0e0e0'">
+                    <div id="recipientError" style="color: #dc3545; font-size: 14px; margin-top: 5px; display: none;">
+                        ❌ User not found
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #555; display: flex; align-items: center; gap: 8px;">
+                        <span>📝</span>
+                        <span>Subject</span>
+                    </label>
+                    <input type="text" 
+                           name="subject" 
+                           style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;"
+                           placeholder="Enter email subject"
+                           required
+                           onfocus="this.style.borderColor='#4285f4'"
+                           onblur="this.style.borderColor='#e0e0e0'">
+                </div>
+            {% endif %}
+            
+            <!-- Message Body -->
+            <div style="margin-bottom: 30px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #555; display: flex; align-items: center; gap: 8px;">
+                    <span>💬</span>
+                    <span>Message</span>
+                </label>
+                <textarea name="body" 
+                          id="messageBody"
+                          rows="12" 
+                          style="width: 100%; padding: 16px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; font-family: inherit; resize: vertical;"
+                          placeholder="Type your message here..."
+                          required
+                          onfocus="this.style.borderColor='#4285f4'"
+                          onblur="this.style.borderColor='#e0e0e0'">{% if quoted_text %}{{ quoted_text }}{% endif %}</textarea>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                    <span style="color: #888; font-size: 14px;">
+                        Minimum 10 characters required
+                    </span>
+                    <span id="charCount" style="color: #888; font-size: 14px;">
+                        0 characters
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Original Message Preview (for replies) -->
+            {% if is_reply and original %}
+                <div style="margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0; color: #666; display: flex; align-items: center; gap: 8px;">
+                            <span>📄</span>
+                            <span>Original Message</span>
+                        </h4>
+                        <button type="button" 
+                                onclick="document.getElementById('originalPreview').style.display = document.getElementById('originalPreview').style.display === 'none' ? 'block' : 'none'"
+                                style="background: none; border: none; color: #4285f4; cursor: pointer; font-size: 14px;">
+                            Toggle Preview
+                        </button>
+                    </div>
+                    <div id="originalPreview" style="display: block;">
+                        <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #4285f4;">
+                            <div style="font-weight: 600; margin-bottom: 10px;">
+                                {{ original.sender.username }} wrote:
+                            </div>
+                            <div style="color: #666; font-size: 14px; line-height: 1.6; max-height: 200px; overflow-y: auto;">
+                                {{ original.body|truncatechars:500 }}
+                            </div>
+                            <div style="color: #888; font-size: 12px; margin-top: 10px;">
+                                Sent: {{ original.timestamp|date:"M d, Y H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 15px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                <button type="submit" 
+                        class="btn btn-primary"
+                        style="display: flex; align-items: center; gap: 10px; padding: 14px 30px;"
+                        {% if not device.can_write %}disabled{% endif %}>
+                    <span>📤</span>
+                    <span>{% if is_reply %}Send Reply{% else %}Send Email{% endif %}</span>
+                </button>
+                
+                <button type="button" 
+                        onclick="document.getElementById('composeForm').reset();"
+                        class="btn btn-secondary"
+                        style="display: flex; align-items: center; gap: 10px; padding: 14px 30px;">
+                    <span>🔄</span>
+                    <span>Clear</span>
+                </button>
+                
+                <a href="{% url 'emails:inbox' %}" 
+                   class="btn btn-secondary"
+                   style="display: flex; align-items: center; gap: 10px; padding: 14px 30px;">
+                    <span>✕</span>
+                    <span>Cancel</span>
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Writing Tips -->
+    <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 10px;">
+        <h4 style="display: flex; align-items: center; gap: 10px; margin: 0 0 15px 0; color: #1565c0;">
+            <span>💡</span>
+            <span>Writing Tips</span>
+        </h4>
+        <ul style="margin: 0; padding-left: 20px; color: #1565c0;">
+            <li>Be clear and concise in your message</li>
+            <li>Check the recipient's username before sending</li>
+            <li>Use proper subject lines for better organization</li>
+            <li>Review your message before sending</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Character counter
+    const messageBody = document.getElementById('messageBody');
+    const charCount = document.getElementById('charCount');
+    
+    messageBody.addEventListener('input', function() {
+        const length = this.value.length;
+        charCount.textContent = `${length} character${length !== 1 ? 's' : ''}`;
+        
+        if (length < 10) {
+            charCount.style.color = '#dc3545';
+        } else if (length < 50) {
+            charCount.style.color = '#ffc107';
+        } else {
+            charCount.style.color = '#28a745';
+        }
+    });
+    
+    // Trigger initial count
+    messageBody.dispatchEvent(new Event('input'));
+    
+    // Form validation
+    document.getElementById('composeForm').addEventListener('submit', function(e) {
+        const recipient = document.getElementById('recipientInput');
+        const message = document.getElementById('messageBody');
+        const recipientError = document.getElementById('recipientError');
+        
+        if (recipient && recipient.value.trim() === '') {
+            e.preventDefault();
+            alert('❌ Please enter a recipient username.');
+            recipient.focus();
+            return;
+        }
+        
+        if (message.value.trim().length < 10) {
+            e.preventDefault();
+            alert('❌ Message must be at least 10 characters long.');
+            message.focus();
+            return;
+        }
+        
+        // Check recipient existence (for new emails only)
+        {% if not is_reply %}
+            e.preventDefault();
+            fetch('/admin/auth/user/?q=' + recipient.value.trim())
+                .then(response => response.text())
+                .then(html => {
+                    if (html.includes(recipient.value.trim())) {
+                        // User exists, submit form
+                        document.getElementById('composeForm').submit();
+                    } else {
+                        // User doesn't exist
+                        recipientError.style.display = 'block';
+                        recipient.style.borderColor = '#dc3545';
+                        recipient.focus();
+                    }
+                })
+                .catch(() => {
+                    // If check fails, proceed anyway
+                    document.getElementById('composeForm').submit();
+                });
+        {% endif %}
+    });
+    
+    // Auto-focus message body
+    setTimeout(() => {
+        const bodyField = document.getElementById('messageBody');
+        if (bodyField && !bodyField.value.trim()) {
+            bodyField.focus();
+        }
+    }, 100);
+</script>
+
+<style>
+    #messageBody {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+    }
+    
+    @media (max-width: 768px) {
+        .compose-actions {
+            flex-direction: column;
+        }
+        
+        .compose-actions button,
+        .compose-actions a {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Email System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; align-items: center; min-height: 70vh;">
+    <div class="card" style="max-width: 400px; width: 100%;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">🔐</div>
+            <h2>Welcome Back</h2>
+            <p style="color: #666; margin-top: 10px;">Login to your email account</p>
+        </div>
+        
+        <form method="post" style="margin-top: 20px;">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555;">
+                    👤 Username
+                </label>
+                <input type="text" name="username" 
+                       style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; transition: border-color 0.3s;"
+                       placeholder="Enter your username"
+                       required
+                       onfocus="this.style.borderColor='#4285f4'"
+                       onblur="this.style.borderColor='#e0e0e0'">
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555;">
+                    🔒 Password
+                </label>
+                <input type="password" name="password" 
+                       style="width: 100%; padding: 14px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; transition: border-color 0.3s;"
+                       placeholder="Enter your password"
+                       required
+                       onfocus="this.style.borderColor='#4285f4'"
+                       onblur="this.style.borderColor='#e0e0e0'">
+            </div>
+            
+            <button type="submit" 
+                    style="width: 100%; padding: 16px; background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.3s;">
+                Login
+            </button>
+            
+            {% if form.errors %}
+            <div style="margin-top: 20px; padding: 15px; background: #f8d7da; color: #721c24; border-radius: 10px; text-align: center;">
+                ❌ Invalid username or password. Please try again.
+            </div>
+            {% endif %}
+        </form>
+        
+        <div style="margin-top: 30px; text-align: center; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #666; margin-bottom: 10px;">Don't have an account?</p>
+            <a href="{% url 'accounts:register' %}" 
+               style="display: inline-block; padding: 12px 30px; background: #f8f9fa; color: #4285f4; text-decoration: none; border-radius: 10px; font-weight: 600; border: 2px solid #e0e0e0; transition: all 0.3s;">
+                Create New Account
+            </a>
+        </div>
+        
+        {% if user.is_authenticated %}
+        <div style="margin-top: 25px; padding: 15px; background: #e8f5e9; border-radius: 10px; text-align: center;">
+            <p style="color: #2e7d32; margin: 0;">
+                ✅ You are already logged in as <strong>{{ user.username }}</strong>
+            </p>
+            <a href="{% url 'emails:inbox' %}" style="color: #4285f4; text-decoration: none; font-weight: 600;">
+                Go to Inbox →
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

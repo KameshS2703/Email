@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Device Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>📱 Device Permission Management</h2>
+    <p>Manage read/write permissions for all logged-in devices</p>
+    
+    {% if messages %}
+    <div style="margin: 20px 0;">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}" 
+             style="padding: 10px 15px; border-radius: 4px; margin: 5px 0;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="card" style="margin: 20px 0; background: white; border-radius: 8px; overflow: hidden;">
+        <div class="card-header" style="background: #343a40; color: white; padding: 15px;">
+            <h4 style="margin: 0;">Active Devices ({{ device_count }})</h4>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if devices %}
+            <form method="post" action="{% url 'admin_control:device_management' %}">
+                {% csrf_token %}
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 12px; border-bottom: 1px solid #ddd;">Device ID</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #ddd;">Device Name</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #ddd;">User</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #ddd; text-align: center;">Read</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #ddd; text-align: center;">Write</th>
+                            <th style="padding: 12px; border-bottom: 1px solid #ddd; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for device in devices %}
+                        <tr style="border-bottom: 1px solid #f0f0f0;">
+                            <td style="padding: 12px; font-family: monospace; font-size: 12px;">
+                                {{ device.device_id|truncatechars:15 }}
+                            </td>
+                            <td style="padding: 12px;">{{ device.device_name }}</td>
+                            <td style="padding: 12px;">
+                                {% if device.user_info %}
+                                    {{ device.user_info.username }}
+                                {% else %}
+                                    User #{{ device.user_id }}
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <input type="checkbox" 
+                                       name="read_{{ device.device_id }}"
+                                       {% if device.read_permission %}checked{% endif %}
+                                       value="true">
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <input type="checkbox" 
+                                       name="write_{{ device.device_id }}"
+                                       {% if device.write_permission %}checked{% endif %}
+                                       value="true">
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <input type="hidden" name="device_ids" value="{{ device.device_id }}">
+                                <a href="{% url 'admin_control:force_logout' device.device_id %}" 
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Force logout this device?');"
+                                   style="padding: 5px 10px;">
+                                    Logout
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <div style="padding: 20px; text-align: center; border-top: 1px solid #ddd;">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        💾 Save All Permissions
+                    </button>
+                    <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                        Click "Save All Permissions" to apply changes to all devices
+                    </p>
+                </div>
+            </form>
+            {% else %}
+            <div style="padding: 40px; text-align: center; color: #666;">
+                <p>No active devices found.</p>
+                <p>Devices will appear here when users log in.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <a href="{% url 'emails:inbox' %}" class="btn btn-primary">Back to Inbox</a>
+        <a href="/admin/" class="btn btn-secondary">Django Admin</a>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-info">My Profile</a>
+    </div>
+</div>
+
+<style>
+input[type="checkbox"] {
+    transform: scale(1.3);
+    cursor: pointer;
+}
+
+table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.alert {
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 5px 0;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,54 @@
+{
+  "admin_devices": [
+    {
+      "device_id": "629498fe-c838-402b-967c-04a2b43456ba",
+      "device_name": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Sa",
+      "user_id": 3,
+      "read_permission": true,
+      "write_permission": true,
+      "is_active": true
+    }
+  ],
+  "user_devices": [
+    {
+      "device_id": "2373ec0e-4624-4a26-95a4-4c5e445d80b2",
+      "device_name": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Sa",
+      "user_id": 2,
+      "read_permission": true,
+      "write_permission": true,
+      "is_active": true
+    },
+    {
+      "device_id": "9f2b89bd-7430-41fb-ab55-cc028ff40b77",
+      "device_name": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Sa",
+      "user_id": 2,
+      "read_permission": true,
+      "write_permission": true,
+      "is_active": true
+    },
+    {
+      "device_id": "35d2b345-3162-4992-a077-6254021f6949",
+      "device_name": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Sa",
+      "user_id": 2,
+      "read_permission": true,
+      "write_permission": true,
+      "is_active": true
+    },
+    {
+      "device_id": "cc5053cc-cdf1-4f83-909e-47297e58dfed",
+      "device_name": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Sa",
+      "user_id": 2,
+      "read_permission": true,
+      "write_permission": true,
+      "is_active": true
+    },
+    {
+      "device_id": "74bf8a89-e37a-4583-8dae-31271cf85f45",
+      "device_name": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Sa",
+      "user_id": 2,
+      "read_permission": true,
+      "write_permission": true,
+      "is_active": true
+    }
+  ]
+}
